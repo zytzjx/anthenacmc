@@ -3,10 +3,12 @@ package main
 import (
 	"encoding/json"
 	"testing"
+
+	cmc "github.com/zytzjx/anthenacmc/cmcserverinfo"
 )
 
 func TestLogUDIDgetConfig(t *testing.T) {
-	LogUDIDgetConfig("0d38e784-db8b-4ae2-8a96-e35e4f268240")
+	LogUDIDgetConfig("6c87ceb9-25a3-4e09-b81b-fb0a57b64d42")
 }
 func TestRedisPUBSUB(t *testing.T) {
 
@@ -35,14 +37,10 @@ func TestConfigParse(t *testing.T) {
 		"id": 34524
 		}`
 
-	var dat ConfigInstall //map[string]interface{}
+	var dat cmc.ConfigInstall //map[string]interface{}
 	if err := json.Unmarshal([]byte(sss), &dat); err != nil {
 		panic(err)
 	}
-}
-
-func TestExampleClient(t *testing.T) {
-	ExampleClient()
 }
 
 func TestParseLogResult(t *testing.T) {
@@ -99,7 +97,7 @@ func TestParseLogResult(t *testing.T) {
 		"manageCredit": false, 
 		"date_joined": "2015-07-15T23:38:15+00:00"
 	}`
-	var loginres LoginResult
+	var loginres cmc.LoginResult
 	if err := json.Unmarshal([]byte(sss), &loginres); err != nil {
 		panic(err)
 	}

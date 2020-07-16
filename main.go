@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -9,169 +8,19 @@ import (
 	"io/ioutil"
 	"os"
 	"strconv"
-	"time"
 
-	"github.com/go-redis/redis/v8"
 	"github.com/go-resty/resty/v2"
 
+	cmc "github.com/zytzjx/anthenacmc/cmcserverinfo"
+	dmc "github.com/zytzjx/anthenacmc/datacentre"
 	Log "github.com/zytzjx/anthenacmc/loggersys"
 	_ "github.com/zytzjx/anthenacmc/loggersys"
 )
 
-// ConfigResult
-type ConfigResult struct {
-	ID                 string `json:"_id"`
-	Adminconsoleserver string `json:"adminconsoleserver"`
-	Companyid          string `json:"companyid"`
-	Installitunes      string `json:"installitunes"`
-	PName              string `json:"pname"`
-	ServerTime         string `json:"serverTime"`
-	Staticfileserver   string `json:"staticfileserver"`
-	Webserviceserver   string `json:"webserviceserver"`
-	Productid          string `json:"productid"`
-	Siteid             string `json:"siteid"`
-	Solutionid         string `json:"solutionid"`
-}
-
-// ConfigInstall
-type ConfigInstall struct {
-	ID      int            `json:"id"`
-	Ok      int            `json:"ok"`
-	Results []ConfigResult `json:"results"`
-}
-
-// User
+// User login usename and password
 type User struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
-}
-
-type AvailableProduct struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
-}
-
-// LoginResult
-type LoginResult struct {
-	Username          string             `json:"username"`
-	FirstName         string             `json:"first_name"`
-	LastName          string             `json:"last_name"`
-	Companygroup      interface{}        `json:"companygroup"`
-	LastPwdReset      time.Time          `json:"last_pwd_reset"`
-	Company           int                `json:"company"`
-	IsActive          bool               `json:"is_active"`
-	Site              int                `json:"site"`
-	Managedsites      []interface{}      `json:"managedsites"`
-	Email             string             `json:"email"`
-	IsSuperuser       bool               `json:"is_superuser"`
-	IsStaff           bool               `json:"is_staff"`
-	LastLogin         time.Time          `json:"last_login"`
-	AvailableProducts []AvailableProduct `json:"available_products"`
-	Groups            []int              `json:"groups"`
-	Crosssites        []interface{}      `json:"crosssites"`
-	Managedcompanys   []interface{}      `json:"managedcompanys"`
-	ID                int                `json:"id"`
-	ManageCredit      bool               `json:"manageCredit"`
-	DateJoined        time.Time          `json:"date_joined"`
-}
-
-var ctx = context.Background()
-
-// ExampleClient : testgu
-// Printer : what is this?
-// Greet : describe what this function does
-// CreateMessage : describe what this function does
-func ExampleClient() {
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password set
-		DB:       0,  // use default DB
-	})
-	err := rdb.Set(ctx, "key", "value", 0).Err()
-	if err != nil {
-		panic(err)
-	}
-
-	err = rdb.HSet(ctx, "runoobkey", "JJJ", "aassaa").Err()
-	if err != nil {
-		panic(err)
-	}
-
-	dict, err := rdb.HGetAll(ctx, "runoobkey").Result()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("runoobkey", dict)
-
-	val, err := rdb.Get(ctx, "key").Result()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("key", val)
-
-	val2, err := rdb.Get(ctx, "key2").Result()
-	if err == redis.Nil {
-		fmt.Println("key2 does not exist")
-	} else if err != nil {
-		panic(err)
-	} else {
-		fmt.Println("key2", val2)
-	}
-	// user := map[string]string{"Name": "Pradeep", "Company": "SCTL", "Address": "Mumbai", "Location": "RCP"}
-	RedisPUBSUB(rdb)
-
-	// Output: key value
-	// key2 does not exist
-}
-
-//RedisPUBSUB PUBSUB
-func RedisPUBSUB(rdb *redis.Client) {
-	pubsub := rdb.PSubscribe(ctx, "mychannel*")
-	defer pubsub.Close()
-
-	// Wait for confirmation that subscription is created before publishing anything.
-	_, err := pubsub.Receive(ctx)
-	if err != nil {
-		panic(err)
-	}
-
-	// Go channel which receives messages.
-	ch := pubsub.Channel()
-
-	// // Publish a message.
-	// err = rdb.Publish(ctx, "mychannel1ABC", "hello").Err()
-	// if err != nil {
-	// 	panic(err)
-	// }
-
-	// time.AfterFunc(time.Second, func() {
-	// 	// When pubsub is closed channel is closed too.
-	// 	_ = pubsub.Close()
-	// })
-
-	// Consume messages.
-	for msg := range ch {
-		fmt.Println(msg.Channel, msg.Payload)
-	}
-}
-
-// SaveSerialConfigRedis
-func SaveSerialConfigRedis(confInstall ConfigInstall) {
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password set
-		DB:       0,  // use default DB
-	})
-	file, _ := json.Marshal(confInstall.Results[0])
-	var result map[string]string
-	if err := json.Unmarshal(file, &result); err != nil {
-		fmt.Println("data error")
-	}
-
-	for k, v := range result { // HGETALL serialconfig
-		rdb.HMSet(ctx, "serialconfig", k, v)
-	}
-	// rdb.HGetAll(ctx, "serialconfig").Result()
 }
 
 // LogUDIDgetConfig  dd
@@ -192,14 +41,14 @@ func LogUDIDgetConfig(uuid string) int {
 		return 1
 	}
 
-	var dat ConfigInstall //map[string]interface{}
+	var dat cmc.ConfigInstall //map[string]interface{}
 	Log.Log.Info(string(resp.Body()))
 	if err := json.Unmarshal(resp.Body(), &dat); err != nil {
 		// panic(err)
 		Log.Log.Error(err)
 		return 2
 	}
-	SaveSerialConfigRedis(dat)
+	dmc.SaveSerialConfigRedis(dat)
 	file, _ := json.MarshalIndent(dat, "", " ")
 	_ = ioutil.WriteFile("serialconfig.json", file, 0644)
 
@@ -248,7 +97,7 @@ func LogUDIDgetConfig(uuid string) int {
 }
 
 // loginCMC
-func loginCMC(config ConfigInstall, usr User) (*LoginResult, error) {
+func loginCMC(config cmc.ConfigInstall, usr User) (*cmc.LoginResult, error) {
 	if config.Ok != 1 {
 		return nil, errors.New("serial config is not sucessful")
 	}
@@ -277,7 +126,7 @@ func loginCMC(config ConfigInstall, usr User) (*LoginResult, error) {
 	}
 
 	fmt.Println(string(resp.Body()))
-	var loginres LoginResult
+	var loginres cmc.LoginResult
 	if err := json.Unmarshal(resp.Body(), &loginres); err != nil {
 		return nil, errors.New("json format parse to Login Result error")
 	}
@@ -304,7 +153,7 @@ func Find(slice []int, val int) (int, bool) {
 // string product_id = productId();
 // string site_id = siteId();
 // string strcheckid = checksiteId();
-func ParseLogResult(loginres LoginResult, companyID int, productID int, siteID int, allowCheckSiteID bool) int {
+func ParseLogResult(loginres cmc.LoginResult, companyID int, productID int, siteID int, allowCheckSiteID bool) int {
 	var operatorvalue bool
 	var bProduct bool
 	ret := 0
@@ -390,7 +239,7 @@ func main() {
 		defer jsonFile.Close()
 
 		byteValue, _ := ioutil.ReadAll(jsonFile)
-		var dat ConfigInstall //map[string]interface{}
+		var dat cmc.ConfigInstall //map[string]interface{}
 		if err := json.Unmarshal(byteValue, &dat); err != nil {
 			// panic(err)
 			Log.Log.Error(err)

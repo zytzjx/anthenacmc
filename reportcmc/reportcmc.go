@@ -1,4 +1,4 @@
-package main
+package reportcmc
 
 import (
 	"crypto/rand"
@@ -33,7 +33,7 @@ func transcation(url string, info map[string]interface{}) {
 	resp, err := client.R().
 		SetHeader("Content-Type", "application/json").
 		SetBody(info).
-		Post(fmt.Sprintf("%s%s", url, "api/auth/"))
+		Post(fmt.Sprintf("%s%s", url, "insert/"))
 
 	if err != nil {
 		fmt.Println("web request fail")

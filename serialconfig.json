@@ -1,0 +1,19 @@
+{
+ "id": 34638,
+ "ok": 1,
+ "results": [
+  {
+   "_id": "0d38e784-db8b-4ae2-8a96-e35e4f268240",
+   "adminconsoleserver": "http://cmcqa.futuredial.com/",
+   "companyid": "83",
+   "installitunes": "False",
+   "pname": "CMC GreenT V5",
+   "serverTime": "2020-01-22T23:17:51.679Z",
+   "staticfileserver": "http://cmcqa-dl.futuredial.com/",
+   "webserviceserver": "http://cmcqa.futuredial.com/ws/",
+   "productid": "1",
+   "siteid": "104",
+   "solutionid": "1"
+  }
+ ]
+}

@@ -76,7 +76,6 @@ func LoadConfig() {
 	// Check format version
 	if Conf.Version != confVer {
 		Log.Log.Warn("Your configuration file is outdated. Please do consider updating it.")
-		Log.Log.Hint("Check the latest version of bee's configuration file.")
 	}
 
 }
