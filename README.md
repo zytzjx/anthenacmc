@@ -1,7 +1,7 @@
 ![](https://www.futuredial.com/wp-content/uploads/2020/02/futuredial-logo-color.svg)
 
 ### Discraption
-    This is Anthena project background function.
+    This is Athena project background function.
 
 ### Technology stack
 | Syntax      | Description |

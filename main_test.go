@@ -10,9 +10,6 @@ import (
 func TestLogUDIDgetConfig(t *testing.T) {
 	LogUDIDgetConfig("6c87ceb9-25a3-4e09-b81b-fb0a57b64d42")
 }
-func TestRedisPUBSUB(t *testing.T) {
-
-}
 
 func TestConfigParse(t *testing.T) {
 	sss := `{

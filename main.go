@@ -148,7 +148,7 @@ func Find(slice []int, val int) (int, bool) {
 	return -1, false
 }
 
-// ParseLogResult
+// ParseLogResult parser log in
 // string company_id = companyId();
 // string product_id = productId();
 // string site_id = siteId();
