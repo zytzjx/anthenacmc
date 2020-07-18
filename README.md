@@ -1,16 +1,22 @@
 ![](https://www.futuredial.com/wp-content/uploads/2020/02/futuredial-logo-color.svg)
 
-### Discraption
+### Discraptioncd 
     This is Athena project background function.
 
 ### Technology stack
 | Syntax      | Description |
-| ----------- | ----------- |
+| :----------- | :----------- |
 | Logger      | [lfshook](https://github.com/rifflocklfshook)|
+|Redis|![](https://redis.io/images/redis-white.png)|
+
 
 ```
-apt install 
-go get
+go get github.com/go-redis/redis/v8
+go get github.com/go-resty/resty/v2 
+go get github.com/lestrrat-go/file-rotatelogs 
+go get github.com/rifflock/lfshook
+go get github.com/sirupsen/logrus 
+go get gopkg.in/yaml.v2 
 ```
 
 $$ J_\alpha(x) = \sum_{m=0}^\infty \frac{(-1)^m}{m! \Gamma (m + \alpha + 1)} {\left({ \frac{x}{2} }\right)}^{2m + \alpha} \text {，行内公式示例  } $$
