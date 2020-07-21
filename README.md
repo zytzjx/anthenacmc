@@ -19,11 +19,13 @@ go get github.com/sirupsen/logrus
 go get gopkg.in/yaml.v2 
 ```
 
+
 $$ J_\alpha(x) = \sum_{m=0}^\infty \frac{(-1)^m}{m! \Gamma (m + \alpha + 1)} {\left({ \frac{x}{2} }\right)}^{2m + \alpha} \text {，行内公式示例  } $$
 
 
 this is athena function library. any other function only main.go.
 uuid get config
+Results[0] save redis DB, Key is **serialconfig**, value is hash.
 ```
 {
    "ok":1,
@@ -44,4 +46,9 @@ uuid get config
    "id":34787
 }
 
+```
+### CommandLine
+```
+anthenacmc -udid="6c87ceb9-25a3-4e09-b81b-fb0a57b64d42"
+anthenacmc -login -username=qa -password=qa
 ```

@@ -26,6 +26,6 @@ func TestLoadIPInfoFromFile(t *testing.T) {
 	t.Log(mac, ip)
 }
 
-func TestCompanySettingDownload(t *testing.T) {
-	CompanySettingDownload()
+func TestDownload(t *testing.T) {
+	Download()
 }

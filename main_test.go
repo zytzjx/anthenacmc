@@ -2,10 +2,64 @@ package main
 
 import (
 	"encoding/json"
+	"encoding/xml"
+	"fmt"
+	"io/ioutil"
+	"os"
 	"testing"
 
 	cmc "github.com/zytzjx/anthenacmc/cmcserverinfo"
 )
+
+type Node struct {
+	Text          string `xml:",chardata"`
+	Index         string `xml:"index,attr"`
+	AttrText      string `xml:"text,attr"`
+	ResourceID    string `xml:"resource-id,attr"`
+	Class         string `xml:"class,attr"`
+	Package       string `xml:"package,attr"`
+	ContentDesc   string `xml:"content-desc,attr"`
+	Checkable     string `xml:"checkable,attr"`
+	Checked       string `xml:"checked,attr"`
+	Clickable     string `xml:"clickable,attr"`
+	Enabled       string `xml:"enabled,attr"`
+	Focusable     string `xml:"focusable,attr"`
+	Focused       string `xml:"focused,attr"`
+	Scrollable    string `xml:"scrollable,attr"`
+	LongClickable string `xml:"long-clickable,attr"`
+	Password      string `xml:"password,attr"`
+	Selected      string `xml:"selected,attr"`
+	Bounds        string `xml:"bounds,attr"`
+	NAF           string `xml:"NAF,attr"`
+	Node          []Node `xml:"node"`
+}
+
+type Hierarchy struct {
+	XMLName  xml.Name `xml:"hierarchy"`
+	Text     string   `xml:",chardata"`
+	Rotation string   `xml:"rotation,attr"`
+	Node     Node     `xml:"node"`
+}
+
+func TestXMLParser(t *testing.T) {
+	xmls, err := os.Open("dump3.xml")
+	// if we os.Open returns an error then handle it
+	if err != nil {
+		t.Error(err)
+	}
+	fmt.Println("Successfully Opened dump1.xml")
+	// defer the closing of our jsonFile so that we can parse it later on
+	defer xmls.Close()
+
+	var v Hierarchy
+	byteValue, _ := ioutil.ReadAll(xmls)
+	err = xml.Unmarshal([]byte(byteValue), &v)
+	if err != nil {
+		fmt.Printf("error: %v", err)
+		return
+	}
+	fmt.Println(v)
+}
 
 func TestLogUDIDgetConfig(t *testing.T) {
 	LogUDIDgetConfig("6c87ceb9-25a3-4e09-b81b-fb0a57b64d42")
@@ -17,7 +71,7 @@ func TestConfigParse(t *testing.T) {
 		"results": 
 		[
 			{
-				"companyid": "83", 
+				"companyid": 83, 
 				"staticfileserver": "http://cmcqa-dl.futuredial.com/", 
 				"serverTime": "2020-01-22T23:17:51.679Z", 
 				"pname": "CMC GreenT V5", 

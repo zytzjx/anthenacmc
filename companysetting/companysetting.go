@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/go-resty/resty/v2"
 	dmc "github.com/zytzjx/anthenacmc/datacentre"
@@ -134,8 +135,8 @@ func loadIPInfoFromFile() (string, string, error) {
 	return "", "", errors.New("Not find mac ip from file")
 }
 
-// CompanySettingDownload get download setting json
-func CompanySettingDownload() {
+// Download get download setting json
+func Download() {
 	configresult, err := dmc.GetSerialConfig()
 	if err != nil {
 		Log.Log.Error(err)
@@ -146,7 +147,8 @@ func CompanySettingDownload() {
 	remoteip, _ := getRemoteIP()
 	var requestSetting RequestSetting
 	requestSetting.Protocol = "3.0"
-	requestSetting.Client.Company = configresult.Companyid
+	companyid, _ := configresult.GetCompanyID()
+	requestSetting.Client.Company = strconv.Itoa(companyid)
 	requestSetting.Client.Solutionid = configresult.Solutionid
 	requestSetting.Client.Productid = configresult.Productid
 	requestSetting.Client.Site = configresult.Siteid

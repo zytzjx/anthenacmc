@@ -251,12 +251,11 @@ func main() {
 			Log.Log.Error(err)
 			os.Exit(5)
 		}
-
-		Companyid, _ := strconv.Atoi(dat.Results[0].Companyid)
+		Companyid, _ := dat.Results[0].GetCompanyID()
 		Productid, _ := strconv.Atoi(dat.Results[0].Productid)
 		Siteid, _ := strconv.Atoi(dat.Results[0].Siteid)
 		ret = ParseLogResult(*loginres, Companyid, Productid, Siteid, false)
-		os.Exit(ret)
 	}
+	os.Exit(ret)
 
 }
