@@ -211,6 +211,7 @@ func ParseLogResult(loginres cmc.LoginResult, companyID int, productID int, site
 }
 
 func main() {
+	Log.NewLogger("anthena")
 	bLogin := flag.Bool("login", false, "-login login or get project config by serialnamber")
 	uuid := flag.String("uuid", "", "serialnumber of the project ")
 	username := flag.String("username", "", "login user name")

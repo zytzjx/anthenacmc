@@ -47,8 +47,8 @@ type RequestSetting struct {
 	Protocol string     `json:"protocol"`
 }
 
-// LocalMacIp mac and ip
-type LocalMacIp struct {
+// LocalMacIP mac and ip
+type LocalMacIP struct {
 	Mac string `json:"mac"`
 	IP  string `json:"ip"`
 }

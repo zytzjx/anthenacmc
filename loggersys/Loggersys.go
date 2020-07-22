@@ -1,6 +1,8 @@
 package loggersys
 
 import (
+	"fmt"
+	"os"
 	"time"
 
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
@@ -12,17 +14,23 @@ import (
 var Log *logrus.Logger
 
 func init() {
-	NewLogger()
+	if _, err := os.Stat("logs"); os.IsNotExist(err) {
+		// /var/log/anthena does not exist
+		if err = os.Mkdir("logs", 0775); err != nil {
+			fmt.Println(err)
+		}
+	}
 }
 
 // NewLogger create file logger system
-func NewLogger() *logrus.Logger {
+func NewLogger(filename string) *logrus.Logger {
 	if Log != nil {
 		return Log
 	}
 
-	path := "/home/qa/works/anthenacmc/anthena_%Y%m%d%H.log"
-	lpath := "/home/qa/works/anthenacmc/anthena.log"
+	path := fmt.Sprintf("logs/%s", filename)
+	path += "_%Y%m%d%H.log"
+	lpath := fmt.Sprintf("logs/%s.log", filename)
 	writer, err := rotatelogs.New(
 		path,
 		// WithLinkName为最新的日志建立软连接,以方便随着找到当前日志文件

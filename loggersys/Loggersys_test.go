@@ -1,10 +1,10 @@
 package loggersys
 
-import(
+import (
 	"testing"
 )
 
-func TestNewLogger(t *testing.T)  {
-	loger:=NewLogger() 
+func TestNewLogger(t *testing.T) {
+	loger := NewLogger("aa")
 	loger.Info("Ad ddd ddd ddd ")
 }
