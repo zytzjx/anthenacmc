@@ -136,11 +136,11 @@ func loadIPInfoFromFile() (string, string, error) {
 }
 
 // Download get download setting json
-func Download() {
+func Download() (map[string]interface{}, error) {
 	configresult, err := dmc.GetSerialConfig()
 	if err != nil {
 		Log.Log.Error(err)
-		return
+		return nil, err
 	}
 	pcname, _ := Util.GetPCName()
 	mac, ip, _ := GetLocalPCInfo()
@@ -171,9 +171,15 @@ func Download() {
 
 	if err != nil {
 		fmt.Println("web request fail")
-		return
+		return nil, fmt.Errorf("Web request(get product settings)failed %v", err)
 	}
 	if resp.StatusCode() == http.StatusOK {
-		fmt.Println(string(resp.Body()))
+		var dat map[string]interface{}
+		if err = json.Unmarshal(resp.Body(), &dat); err != nil {
+			return nil, fmt.Errorf("data format error. %v", err)
+		}
+		return dat, nil
+		// fmt.Println(string(resp.Body()))
 	}
+	return nil, fmt.Errorf("Web request(get product settings)failed %v", resp.Error())
 }

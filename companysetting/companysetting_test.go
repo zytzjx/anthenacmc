@@ -1,6 +1,10 @@
 package companysetting
 
-import "testing"
+import (
+	"testing"
+
+	Log "github.com/zytzjx/anthenacmc/loggersys"
+)
 
 func TestGetRemoteIP(t *testing.T) {
 	ip, err := getRemoteIP()
@@ -27,5 +31,10 @@ func TestLoadIPInfoFromFile(t *testing.T) {
 }
 
 func TestDownload(t *testing.T) {
-	Download()
+	Log.NewLogger("anthena")
+	data, err := Download()
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(data)
 }
