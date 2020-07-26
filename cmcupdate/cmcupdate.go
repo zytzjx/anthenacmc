@@ -16,6 +16,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	cmc "github.com/zytzjx/anthenacmc/cmcserverinfo"
 	Log "github.com/zytzjx/anthenacmc/loggersys"
+	"github.com/zytzjx/anthenacmc/utils"
 )
 
 // ClientInfo cmc UUID  response
@@ -64,7 +65,7 @@ type StatusResponse struct {
 	Framework FrameworkFiles         `json:"framework"`
 	Phonedll  ModuleFiles            `json:"phonedll"`
 	Phonetips ModuleFiles            `json:"phonetips"`
-	Settings  map[string]interface{} `json:"settings"`
+	Settings  map[string]interface{} `json:"settings,omitempty"`
 }
 
 // newSyncStatus for first request
@@ -106,17 +107,17 @@ func (mfi ModuleFileItem) GetFileSize() (int, error) {
 
 // saveStatusFile save for download
 func saveStatusFile(jsondata []byte) error {
-	return ioutil.WriteFile("syncstatus.json", jsondata, 0644)
+	return ioutil.WriteFile("res_syncstatus.json", jsondata, 0644)
 }
 
 // sendRequest send request to cmc server
 func sendRequest(url string, syncstauts SyncStatus) (StatusResponse, error) {
 	var download StatusResponse
-	ss, err := json.Marshal(syncstauts)
-	if err != nil {
-		return download, errors.New("request json format error")
-	}
-	fmt.Println(string(ss))
+	// ss, err := json.Marshal(syncstauts)
+	// if err != nil {
+	// 	return download, errors.New("request json format error")
+	// }
+	// fmt.Println(string(ss))
 	// Create a Resty Client
 	client := resty.New()
 	// POST Struct, default is JSON content type. No need to set one
@@ -189,6 +190,8 @@ func loadcompanysetting() (ClientInfo, string, error) {
 
 }
 
+var syncstatus SyncStatus
+
 // UpdateCMC update data from CMC
 func UpdateCMC() (StatusResponse, error) {
 	cliinfo, updateurl, err := loadcompanysetting()
@@ -197,7 +200,7 @@ func UpdateCMC() (StatusResponse, error) {
 		return StatusResponse{}, err
 	}
 	updateurl = updateurl + "update/"
-	var syncstatus SyncStatus
+
 	// clientstatus
 	jsonFile, err := os.Open("clientstatus.json")
 	// if we os.Open returns an error then handle it
@@ -240,9 +243,35 @@ func httpdownload(URL, fileName string) error {
 	return nil
 }
 
+func md5file(localpath, checksum string) (bool, error) {
+	f, err := os.Open(localpath)
+	if err != nil {
+		return false, err
+	}
+	defer f.Close()
+
+	h := md5.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return false, err
+	}
+
+	md5file := fmt.Sprintf("%X", h.Sum(nil))
+	if md5file != checksum {
+		return false, errors.New("download file checksum failed")
+	}
+	return true, nil
+}
+
 func downloadFile(mfi ModuleFileItem) error {
 	file := path.Base(mfi.DownloadURL)
 	localpath := path.Join("update", file)
+
+	if utils.FileExists(localpath) {
+		if ok, _ := md5file(localpath, mfi.Checksum); ok {
+			return nil
+		}
+	}
+
 	if err := httpdownload(mfi.DownloadURL, localpath); err != nil {
 		return err
 	}
