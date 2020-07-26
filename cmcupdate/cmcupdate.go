@@ -165,22 +165,11 @@ func loadcompanysetting() (ClientInfo, string, error) {
 	// Open our jsonFile
 	var cliinfo ClientInfo
 
-	jsonFile, err := os.Open("serialconfig.json")
-	// if we os.Open returns an error then handle it
-	if err != nil {
-		Log.Log.Error(err)
-		return cliinfo, "", fmt.Errorf("serial number run first. %s", err)
-	}
-	fmt.Println("Successfully Opened serialconfig.json")
-	// defer the closing of our jsonFile so that we can parse it later on
-	defer jsonFile.Close()
-
-	byteValue, _ := ioutil.ReadAll(jsonFile)
-	var dat cmc.ConfigInstall //map[string]interface{}
-	if err := json.Unmarshal(byteValue, &dat); err != nil {
-		// panic(err)
+	var dat cmc.ConfigInstall
+	if err := dat.LoadFile("serialconfig.json"); err != nil {
 		return cliinfo, "", err
 	}
+
 	cliinfo.Company, _ = dat.Results[0].GetCompanyID()
 	cliinfo.Productid, _ = strconv.Atoi(dat.Results[0].Productid)
 	cliinfo.Solutionid, _ = strconv.Atoi(dat.Results[0].Solutionid)

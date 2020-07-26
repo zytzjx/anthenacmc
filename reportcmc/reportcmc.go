@@ -141,25 +141,6 @@ func transcation(url string, info map[string]interface{}) (int, error) {
 
 // ReportCMC to server
 func ReportCMC() error {
-	// // Open our jsonFile
-	// jsonFile, err := os.Open("serialconfig.json")
-	// // if we os.Open returns an error then handle it
-	// if err != nil {
-	// 	Log.Log.Error(err)
-	// 	return err
-	// }
-	// fmt.Println("Successfully Opened serialconfig.json")
-	// // defer the closing of our jsonFile so that we can parse it later on
-	// defer jsonFile.Close()
-
-	// byteValue, _ := ioutil.ReadAll(jsonFile)
-	// var dat cmc.ConfigInstall //map[string]interface{}
-	// if err := json.Unmarshal(byteValue, &dat); err != nil {
-	// 	// panic(err)
-	// 	Log.Log.Error(err)
-	// 	return err
-	// }
-
 	var configInstall cmc.ConfigInstall //map[string]interface{}
 	if err := configInstall.LoadFile("serialconfig.json"); err != nil {
 		Log.Log.Error(err)

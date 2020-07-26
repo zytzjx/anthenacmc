@@ -52,7 +52,7 @@ func RedisPUBSUB(rdb *redis.Client) {
 // SaveSerialConfigRedis Save SerialConfig to Redis DB
 func SaveSerialConfigRedis(confInstall cmc.ConfigInstall) {
 	file, _ := json.Marshal(confInstall.Results[0])
-	var result map[string]string
+	var result map[string]interface{}
 	if err := json.Unmarshal(file, &result); err != nil {
 		fmt.Println("data error")
 	}

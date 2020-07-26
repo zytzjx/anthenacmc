@@ -230,21 +230,8 @@ func main() {
 	}
 
 	if *bLogin {
-		// Open our jsonFile
-		jsonFile, err := os.Open("serialconfig.json")
-		// if we os.Open returns an error then handle it
-		if err != nil {
-			Log.Log.Error(err)
-			os.Exit(4)
-		}
-		fmt.Println("Successfully Opened serialconfig.json")
-		// defer the closing of our jsonFile so that we can parse it later on
-		defer jsonFile.Close()
-
-		byteValue, _ := ioutil.ReadAll(jsonFile)
-		var dat cmc.ConfigInstall //map[string]interface{}
-		if err := json.Unmarshal(byteValue, &dat); err != nil {
-			// panic(err)
+		var dat cmc.ConfigInstall
+		if err := dat.LoadFile("serialconfig.json"); err != nil {
 			Log.Log.Error(err)
 			os.Exit(3)
 		}

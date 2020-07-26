@@ -49,6 +49,6 @@ Results[0] save redis DB, Key is **serialconfig**, value is hash.
 ```
 ### CommandLine
 ```
-anthenacmc -udid="6c87ceb9-25a3-4e09-b81b-fb0a57b64d42"
+anthenacmc -uuid="6c87ceb9-25a3-4e09-b81b-fb0a57b64d42"
 anthenacmc -login -username=qa -password=qa
 ```
