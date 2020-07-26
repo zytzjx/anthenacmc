@@ -29,7 +29,7 @@ type ClientInfo struct {
 // ModuleFiles phonedll and phonetips
 type ModuleFiles struct {
 	Filelist   []map[string]interface{} `json:"filelist"`
-	Deletelist []map[string]interface{} `json:"deletelist"`
+	Deletelist []map[string]interface{} `json:"deletelist,omitempty"`
 }
 
 func newModuleFiles() *ModuleFiles {
@@ -43,7 +43,7 @@ func newModuleFiles() *ModuleFiles {
 type FrameworkFiles struct {
 	Version    string                   `json:"version"`
 	Filelist   []map[string]interface{} `json:"filelist"`
-	Deletelist []map[string]interface{} `json:"deletelist"`
+	Deletelist []map[string]interface{} `json:"deletelist,omitempty"`
 }
 
 // SyncStatus request json
@@ -107,7 +107,7 @@ func (mfi ModuleFileItem) GetFileSize() (int, error) {
 
 // saveStatusFile save for download
 func saveStatusFile(jsondata []byte) error {
-	return ioutil.WriteFile("res_syncstatus.json", jsondata, 0644)
+	return ioutil.WriteFile("updatelist.json", jsondata, 0644)
 }
 
 // sendRequest send request to cmc server
@@ -190,8 +190,6 @@ func loadcompanysetting() (ClientInfo, string, error) {
 
 }
 
-var syncstatus SyncStatus
-
 // UpdateCMC update data from CMC
 func UpdateCMC() (StatusResponse, error) {
 	cliinfo, updateurl, err := loadcompanysetting()
@@ -201,6 +199,7 @@ func UpdateCMC() (StatusResponse, error) {
 	}
 	updateurl = updateurl + "update/"
 
+	var syncstatus SyncStatus
 	// clientstatus
 	jsonFile, err := os.Open("clientstatus.json")
 	// if we os.Open returns an error then handle it
