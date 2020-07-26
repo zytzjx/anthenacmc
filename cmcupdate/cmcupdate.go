@@ -29,12 +29,12 @@ type ClientInfo struct {
 // ModuleFiles phonedll and phonetips
 type ModuleFiles struct {
 	Filelist   []map[string]interface{} `json:"filelist"`
-	Deletelist []map[string]interface{} `json:"deletelist,omitempty"`
+	Deletelist []interface{}            `json:"deletelist,omitempty"`
 }
 
 func newModuleFiles() *ModuleFiles {
 	mf := ModuleFiles{}
-	mf.Deletelist = make([]map[string]interface{}, 0)
+	mf.Deletelist = make([]interface{}, 0)
 	mf.Filelist = make([]map[string]interface{}, 0)
 	return &mf
 }
@@ -43,7 +43,7 @@ func newModuleFiles() *ModuleFiles {
 type FrameworkFiles struct {
 	Version    string                   `json:"version"`
 	Filelist   []map[string]interface{} `json:"filelist"`
-	Deletelist []map[string]interface{} `json:"deletelist,omitempty"`
+	Deletelist []interface{}            `json:"deletelist,omitempty"`
 }
 
 // SyncStatus request json
@@ -130,7 +130,7 @@ func sendRequest(url string, syncstauts SyncStatus) (StatusResponse, error) {
 		fmt.Println("web request fail")
 		return download, errors.New("web request fail")
 	}
-	// Log.Log.Info(string(resp.Body()))
+	Log.Log.Info(string(resp.Body()))
 	var dict map[string]interface{}
 	if err := json.Unmarshal(resp.Body(), &dict); err != nil {
 		return download, errors.New("json format error")
