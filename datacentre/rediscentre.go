@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/go-redis/redis/v8"
 
@@ -88,4 +89,29 @@ func GetTransaction() (map[string]string, error) {
 		return map[string]string{}, nil
 	}
 	return result, nil
+}
+
+// Set set key value to Redis{key:value}
+func Set(key string, value interface{}, expiration time.Duration) error {
+	return rdb.Set(ctx, key, value, expiration).Err()
+}
+
+// GetString get value
+func GetString(key string) (string, error) {
+	return rdb.Get(ctx, key).Result()
+}
+
+// GetInt get Int
+func GetInt(key string) (int, error) {
+	return rdb.Get(ctx, key).Int()
+}
+
+// GetFloat get float
+func GetFloat(key string) (float32, error) {
+	return rdb.Get(ctx, key).Float32()
+}
+
+// GetTime get time
+func GetTime(key string) (time.Time, error) {
+	return rdb.Get(ctx, key).Time()
 }

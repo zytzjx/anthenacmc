@@ -3,12 +3,15 @@ package reportcmc
 import (
 	"crypto/rand"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"strconv"
 	"time"
 
 	"github.com/go-resty/resty/v2"
 
+	cmc "github.com/zytzjx/anthenacmc/cmcserverinfo"
 	"github.com/zytzjx/anthenacmc/datacentre"
 	Log "github.com/zytzjx/anthenacmc/loggersys"
 	"github.com/zytzjx/anthenacmc/utils"
@@ -35,6 +38,7 @@ func NewReportBaseFields() *ReportBaseFields {
 	rbf := ReportBaseFields{}
 	id, err := newUUID()
 	if err != nil {
+		Log.Log.Error("new uuid failed")
 		return nil
 	}
 	rbf.ID = id
@@ -43,7 +47,8 @@ func NewReportBaseFields() *ReportBaseFields {
 
 	config, err := datacentre.GetSerialConfig()
 	if err != nil {
-		return nil
+		Log.Log.Error("GetSerialConfig failed")
+		return &rbf
 	}
 	rbf.Site = config.Siteid
 	rbf.Company = config.Companyid.(string)
@@ -90,7 +95,7 @@ func newUUID() (string, error) {
 	return fmt.Sprintf("%x%x%x%x%x", uuid[0:4], uuid[4:6], uuid[6:8], uuid[8:10], uuid[10:]), nil
 }
 
-func transcation(url string, info map[string]interface{}) {
+func transcation(url string, info map[string]interface{}) (int, error) {
 	// Create a Resty Client
 	client := resty.New()
 	// POST Struct, default is JSON content type. No need to set one
@@ -101,8 +106,8 @@ func transcation(url string, info map[string]interface{}) {
 
 	if err != nil {
 		fmt.Println("web request fail")
-		Log.Log.Error("web request fail")
-		return
+		Log.Log.Errorf("web request fail: %s", err)
+		return 0, err
 	}
 	Log.Log.Info(string(resp.Body()))
 
@@ -111,20 +116,82 @@ func transcation(url string, info map[string]interface{}) {
 	if err := json.Unmarshal(resp.Body(), &status); err != nil {
 		// fmt.Println("return format error.")
 		Log.Log.Error("return format error.")
+		return 0, err
 	}
 
 	if val, ok := status["status"]; ok {
 		switch val {
-		case "1", "2":
+		case "1", 1:
+			return 1, nil
+		case "2", 2:
 			// fmt.Println("success")
 			Log.Log.Info("Success")
-		case "4":
+			return 2, nil
+		case "4", 4:
 			Log.Log.Warn("same uuid")
 			// fmt.Println("same uuid")
+			return 4, nil
 		default:
 			// fmt.Println("failed.")
 			Log.Log.Error("failed.")
 		}
 	}
+	return 0, errors.New("I do not know the protocol return")
+}
 
+// ReportCMC to server
+func ReportCMC() error {
+	// // Open our jsonFile
+	// jsonFile, err := os.Open("serialconfig.json")
+	// // if we os.Open returns an error then handle it
+	// if err != nil {
+	// 	Log.Log.Error(err)
+	// 	return err
+	// }
+	// fmt.Println("Successfully Opened serialconfig.json")
+	// // defer the closing of our jsonFile so that we can parse it later on
+	// defer jsonFile.Close()
+
+	// byteValue, _ := ioutil.ReadAll(jsonFile)
+	// var dat cmc.ConfigInstall //map[string]interface{}
+	// if err := json.Unmarshal(byteValue, &dat); err != nil {
+	// 	// panic(err)
+	// 	Log.Log.Error(err)
+	// 	return err
+	// }
+
+	var configInstall cmc.ConfigInstall //map[string]interface{}
+	if err := configInstall.LoadFile("serialconfig.json"); err != nil {
+		Log.Log.Error(err)
+		return err
+	}
+
+	reportbase := NewReportBaseFields()
+	if reportbase == nil {
+		err := errors.New("data base create failed")
+		Log.Log.Error(err)
+		return err
+	}
+
+	reportbase.Operator, _ = datacentre.GetString("login.operator")
+
+	if reportbase.Company == "" || reportbase.PortNumber == "" {
+		reportbase.Site = configInstall.Results[0].Siteid
+		ii, _ := configInstall.Results[0].GetCompanyID()
+		reportbase.Company = strconv.Itoa(ii)
+		reportbase.Productid = configInstall.Results[0].Productid
+		reportbase.PortNumber = "1"
+	}
+	items, err := reportbase.MergeRedis()
+	if err != nil {
+		Log.Log.Error(err)
+		return err
+	}
+
+	_, err = transcation(configInstall.Results[0].Webserviceserver, items)
+	if err != nil {
+		Log.Log.Error(err)
+		return err
+	}
+	return nil
 }

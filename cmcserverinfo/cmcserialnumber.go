@@ -1,7 +1,11 @@
 package cmcserverinfo
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
+	"io/ioutil"
+	"os"
 	"strconv"
 )
 
@@ -42,4 +46,24 @@ func (cr ConfigResult) GetCompanyID() (int, error) {
 		err = errors.New("no support format")
 		return 0, err
 	}
+}
+
+// LoadFile load serialconfig.json file
+func (ci *ConfigInstall) LoadFile(filename string) error {
+	jsonFile, err := os.Open(filename)
+	// if we os.Open returns an error then handle it
+	if err != nil {
+		return err
+	}
+	fmt.Println("Successfully Opened serialconfig.json")
+	// defer the closing of our jsonFile so that we can parse it later on
+	defer jsonFile.Close()
+
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+	// var dat cmc.ConfigInstall //map[string]interface{}
+	if err := json.Unmarshal(byteValue, ci); err != nil {
+		// panic(err)
+		return err
+	}
+	return nil
 }

@@ -3,6 +3,8 @@ package reportcmc
 import (
 	"fmt"
 	"testing"
+
+	Log "github.com/zytzjx/anthenacmc/loggersys"
 )
 
 func TestNewUUID(t *testing.T) {
@@ -22,4 +24,9 @@ func BenchmarkNewUUID(b *testing.B) {
 		}
 		fmt.Printf("%s\n", uuid)
 	}
+}
+
+func TestReportCMC(t *testing.T) {
+	Log.NewLogger("reportcmc")
+	ReportCMC()
 }

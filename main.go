@@ -101,6 +101,8 @@ func loginCMC(config cmc.ConfigInstall, usr User) (*cmc.LoginResult, error) {
 	if config.Ok != 1 {
 		return nil, errors.New("serial config is not sucessful")
 	}
+	dmc.SaveSerialConfigRedis(config)
+
 	url := config.Results[0].Adminconsoleserver
 
 	// Create a Resty Client
@@ -256,6 +258,7 @@ func main() {
 		Productid, _ := strconv.Atoi(dat.Results[0].Productid)
 		Siteid, _ := strconv.Atoi(dat.Results[0].Siteid)
 		ret = ParseLogResult(*loginres, Companyid, Productid, Siteid, false)
+		dmc.Set("login.reporter", loginres.IDReporter, 0)
 	}
 	os.Exit(ret)
 
