@@ -27,7 +27,7 @@ type LoginResult struct {
 	Groups            []int              `json:"groups"`
 	Crosssites        []interface{}      `json:"crosssites"`
 	Managedcompanys   []interface{}      `json:"managedcompanys"`
-	ID                int                `json:"id"`
+	IDReporter        int                `json:"id"`
 	ManageCredit      bool               `json:"manageCredit"`
 	DateJoined        time.Time          `json:"date_joined"`
 }

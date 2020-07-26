@@ -1,9 +1,20 @@
 package ftpclient
 
-import "testing"
+import (
+	"testing"
+
+	Log "github.com/zytzjx/anthenacmc/loggersys"
+)
 
 func TestCreateFolder(t *testing.T) {
-	if err := CreateFolder("abc"); err != nil {
+	fi := newFTPInfo()
+	if err := fi.CreateFolder("abc"); err != nil {
 		t.Error(err)
 	}
+}
+
+func TestPrintInfo(t *testing.T) {
+	Log.NewLogger("ftp")
+	fi := newFTPInfo()
+	fi.PrintInfo()
 }

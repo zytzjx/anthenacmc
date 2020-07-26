@@ -77,3 +77,15 @@ func GetSerialConfig() (cmc.ConfigResult, error) {
 	}
 	return result, nil
 }
+
+// GetTransaction Transaction
+func GetTransaction() (map[string]string, error) {
+	result, err := rdb.HGetAll(ctx, "transaction").Result()
+	if err != nil {
+		return nil, err
+	}
+	if err == redis.Nil {
+		return map[string]string{}, nil
+	}
+	return result, nil
+}
