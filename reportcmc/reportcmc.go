@@ -54,6 +54,11 @@ func NewReportBaseFields() *ReportBaseFields {
 	rbf.Company = config.Companyid.(string)
 	rbf.Productid = config.Productid
 	rbf.PortNumber = "1"
+	rbf.ErrorCode = "1"
+	rbf.EsnNumber = "99000033137773"
+	rbf.SourceMake = "Android"
+	rbf.Operator = "17543"
+	rbf.SourceModel = "PST_ARD_UNIVERSAL_USB_FD"
 
 	return &rbf
 }
@@ -120,14 +125,25 @@ func transcation(url string, info map[string]interface{}) (int, error) {
 	}
 
 	if val, ok := status["status"]; ok {
-		switch val {
-		case "1", 1:
+		var stat int
+		switch val.(type) {
+		case string:
+			stat, _ = strconv.Atoi(val.(string))
+		case float64:
+			stat = int(val.(float64))
+		case int, int32, int64:
+			stat = int(val.(int))
+		}
+		switch stat {
+		case 1:
 			return 1, nil
-		case "2", 2:
+		case 2:
 			// fmt.Println("success")
 			Log.Log.Info("Success")
 			return 2, nil
-		case "4", 4:
+		case 3:
+			return 3, fmt.Errorf("%v", status["error"])
+		case 4:
 			Log.Log.Warn("same uuid")
 			// fmt.Println("same uuid")
 			return 4, nil
@@ -135,6 +151,7 @@ func transcation(url string, info map[string]interface{}) (int, error) {
 			// fmt.Println("failed.")
 			Log.Log.Error("failed.")
 		}
+
 	}
 	return 0, errors.New("I do not know the protocol return")
 }
