@@ -55,10 +55,10 @@ func NewReportBaseFields() *ReportBaseFields {
 	rbf.Productid = config.Productid
 	rbf.PortNumber = "1"
 	rbf.ErrorCode = "1"
-	rbf.EsnNumber = "99000033137773"
-	rbf.SourceMake = "Android"
-	rbf.Operator = "17543"
-	rbf.SourceModel = "PST_ARD_UNIVERSAL_USB_FD"
+	rbf.EsnNumber = "000000000000000"
+	rbf.SourceMake = "Futuredial"
+	rbf.Operator = "00000"
+	rbf.SourceModel = "PST_GRADING_FD"
 
 	return &rbf
 }
