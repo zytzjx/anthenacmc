@@ -250,9 +250,9 @@ func md5file(localpath, checksum string) (bool, error) {
 	return true, nil
 }
 
-func downloadFile(mfi ModuleFileItem) error {
+func downloadFile(mfi ModuleFileItem, pathdownload string) error {
 	file := path.Base(mfi.DownloadURL)
-	localpath := path.Join("update", file)
+	localpath := path.Join(pathdownload, file)
 
 	if utils.FileExists(localpath) {
 		if ok, _ := md5file(localpath, mfi.Checksum); ok {
@@ -330,7 +330,7 @@ func DownloadCMC(strpath string) ([]ModuleFileItem, error) {
 	if err1 == nil {
 		for _, it := range frameworks {
 			go func(mfi ModuleFileItem, wg *sync.WaitGroup) error {
-				err := downloadFile(mfi)
+				err := downloadFile(mfi, strpath)
 				if err != nil {
 					queue <- mfi
 				}
@@ -342,7 +342,7 @@ func DownloadCMC(strpath string) ([]ModuleFileItem, error) {
 	if err2 == nil {
 		for _, it := range phonedll {
 			go func(mfi ModuleFileItem, wg *sync.WaitGroup) error {
-				err := downloadFile(mfi)
+				err := downloadFile(mfi, strpath)
 				if err != nil {
 					queue <- mfi
 				}
@@ -354,7 +354,7 @@ func DownloadCMC(strpath string) ([]ModuleFileItem, error) {
 	if err3 == nil {
 		for _, it := range phonetip {
 			go func(mfi ModuleFileItem, wg *sync.WaitGroup) error {
-				err := downloadFile(mfi)
+				err := downloadFile(mfi, strpath)
 				if err != nil {
 					queue <- mfi
 				}
