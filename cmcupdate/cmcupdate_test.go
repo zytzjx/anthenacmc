@@ -17,5 +17,5 @@ func TestUpdateCMC(t *testing.T) {
 
 func TestDownloadCMC(t *testing.T) {
 	Log.NewLogger("updatecmc")
-	DownloadCMC()
+	DownloadCMC("/opt/futuredial/hydradownloader")
 }

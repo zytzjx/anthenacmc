@@ -297,11 +297,11 @@ func changeToModuleItems(filelist []map[string]interface{}) ([]ModuleFileItem, e
 }
 
 // DownloadCMC dowload from CMC server
-func DownloadCMC() ([]ModuleFileItem, error) {
+func DownloadCMC(strpath string) ([]ModuleFileItem, error) {
 	var faildowndlist []ModuleFileItem
-	if _, err := os.Stat("update"); os.IsNotExist(err) {
+	if _, err := os.Stat(strpath); os.IsNotExist(err) {
 		// /var/log/anthena does not exist
-		if err = os.Mkdir("update", 0775); err != nil {
+		if err = os.MkdirAll(strpath, 0775); err != nil {
 			Log.Log.Error(err)
 			return faildowndlist, err
 		}
