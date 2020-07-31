@@ -376,7 +376,7 @@ func DownloadCMC(strpath string) ([]ModuleFileItem, error) {
 }
 
 // RetryDownload download fail
-func RetryDownload(items []ModuleFileItem) ([]ModuleFileItem, error) {
+func RetryDownload(items []ModuleFileItem, strpath string) ([]ModuleFileItem, error) {
 	var wg sync.WaitGroup
 	count := len(items)
 	wg.Add(count)
@@ -384,7 +384,7 @@ func RetryDownload(items []ModuleFileItem) ([]ModuleFileItem, error) {
 	queue := make(chan ModuleFileItem, 1)
 	for _, it := range items {
 		go func(mfi ModuleFileItem, wg *sync.WaitGroup) error {
-			err := downloadFile(mfi)
+			err := downloadFile(mfi, strpath)
 			if err != nil {
 				queue <- mfi
 			}
