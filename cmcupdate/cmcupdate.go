@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 	"sync"
 
@@ -301,6 +302,44 @@ func changeToModuleItems(filelist []map[string]interface{}) ([]ModuleFileItem, e
 	return mlst, nil
 }
 
+func visit(files *map[string]bool) filepath.WalkFunc {
+	return func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			Log.Log.Error(err)
+		}
+		// *files = append(*files, path)
+		if info.IsDir() {
+			return nil
+		}
+		(*files)[info.Name()] = true
+		return nil
+	}
+}
+
+func cleanlocal(mfilist *[]ModuleFileItem, files *map[string]bool, root string) bool {
+	for _, it := range *mfilist {
+		file := it.Checksum + "_" + path.Base(it.DownloadURL)
+		if _, ok := (*files)[file]; !ok {
+			os.RemoveAll(root)
+			RemoveRedis("hydradownload.framework")
+			RemoveRedis("hydradownload.phonedll")
+			RemoveRedis("hydradownload.phonetip")
+			return true
+		}
+	}
+	return false
+}
+
+func clearLocalFileAndRedis(fw, phdll, phtip []ModuleFileItem, root string) {
+	files := map[string]bool{}
+	err := filepath.Walk(root, visit(&files))
+	if err != nil {
+		Log.Log.Error(err)
+	}
+	if cleanlocal(&fw, &files, root) || cleanlocal(&phdll, &files, root) || cleanlocal(&phtip, &files, root) {
+	}
+}
+
 // DownloadCMC dowload from CMC server
 func DownloadCMC(strpath string) ([]ModuleFileItem, error) {
 	var faildowndlist []ModuleFileItem
@@ -329,6 +368,7 @@ func DownloadCMC(strpath string) ([]ModuleFileItem, error) {
 	if err3 == nil {
 		count += len(phonetip)
 	}
+	clearLocalFileAndRedis(frameworks, phonedll, phonetip, strpath)
 	var wg sync.WaitGroup
 	wg.Add(count)
 	queue := make(chan ModuleFileItem, 1)

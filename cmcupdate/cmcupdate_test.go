@@ -1,6 +1,7 @@
 package cmcupdate
 
 import (
+	"path/filepath"
 	"testing"
 
 	Log "github.com/zytzjx/anthenacmc/loggersys"
@@ -18,4 +19,13 @@ func TestUpdateCMC(t *testing.T) {
 func TestDownloadCMC(t *testing.T) {
 	Log.NewLogger("updatecmc")
 	DownloadCMC("/opt/futuredial/hydradownloader")
+}
+
+func TestListFils(t *testing.T) {
+	Log.NewLogger("updatecmc")
+	files := map[string]bool{}
+	err := filepath.Walk("/opt/futuredial/hydradownloader", visit(&files))
+	if err != nil {
+		Log.Log.Error(err)
+	}
 }

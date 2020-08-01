@@ -46,8 +46,8 @@ func (sdll *SyncDownLoadList) Set(key string, v []string) {
 func (sdll *SyncDownLoadList) SetItem(key string, v string) {
 	sdll.mutex.Lock()
 	defer sdll.mutex.Unlock()
-	if _, ok :=sdll.mp[key]; !ok{
-		sdll.mp[key]=[]string{}
+	if _, ok := sdll.mp[key]; !ok {
+		sdll.mp[key] = []string{}
 	}
 	sdll.mp[key] = append(sdll.mp[key], v)
 }
@@ -68,9 +68,14 @@ func (sdll *SyncDownLoadList) SaveRedis() {
 	defer sdll.mutex.Unlock()
 
 	for k, v := range sdll.mp {
-		for _, vv:=range v{
+		for _, vv := range v {
 			dmc.AddSet(k, vv)
 		}
 	}
 	dmc.Set("hydradownload.status", "complete", 0)
+}
+
+// RemoveRedis remove
+func RemoveRedis(key string) {
+	dmc.Del(key)
 }

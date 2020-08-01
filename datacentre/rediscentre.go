@@ -120,3 +120,8 @@ func GetTime(key string) (time.Time, error) {
 func AddSet(key string, values ...interface{}) error {
 	return rdb.SAdd(ctx, key, values...).Err()
 }
+
+// Del remove keys
+func Del(key ...string) error {
+	return rdb.Del(ctx, key...).Err()
+}
