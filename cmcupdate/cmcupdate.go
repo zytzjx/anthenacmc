@@ -320,7 +320,7 @@ func cleanlocal(mfilist *[]ModuleFileItem, files *map[string]bool, root string) 
 	for _, it := range *mfilist {
 		file := it.Checksum + "_" + path.Base(it.DownloadURL)
 		if _, ok := (*files)[file]; !ok {
-			os.RemoveAll(root)
+			os.RemoveAll(root + "/*")
 			RemoveRedis("hydradownload.framework")
 			RemoveRedis("hydradownload.phonedll")
 			RemoveRedis("hydradownload.phonetip")
@@ -335,6 +335,9 @@ func clearLocalFileAndRedis(fw, phdll, phtip []ModuleFileItem, root string) {
 	err := filepath.Walk(root, visit(&files))
 	if err != nil {
 		Log.Log.Error(err)
+	}
+	if len(files) == 0 {
+		return
 	}
 	if cleanlocal(&fw, &files, root) || cleanlocal(&phdll, &files, root) || cleanlocal(&phtip, &files, root) {
 	}

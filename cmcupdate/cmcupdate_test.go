@@ -1,6 +1,7 @@
 package cmcupdate
 
 import (
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -28,4 +29,8 @@ func TestListFils(t *testing.T) {
 	if err != nil {
 		Log.Log.Error(err)
 	}
+}
+
+func TestRemoveAll(t *testing.T) {
+	os.RemoveAll("/opt/futuredial/hydradownloader/*")
 }
