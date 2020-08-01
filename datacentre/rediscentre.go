@@ -115,3 +115,8 @@ func GetFloat(key string) (float32, error) {
 func GetTime(key string) (time.Time, error) {
 	return rdb.Get(ctx, key).Time()
 }
+
+// AddSet for sets to redis
+func AddSet(key string, values ...interface{}) error {
+	return rdb.SAdd(ctx, key, values...).Err()
+}

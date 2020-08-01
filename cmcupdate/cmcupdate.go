@@ -105,6 +105,8 @@ func (mfi ModuleFileItem) GetFileSize() (int, error) {
 	}
 }
 
+var downlist *SyncDownLoadList
+
 // saveStatusFile save for download
 func saveStatusFile(jsondata []byte) error {
 	return ioutil.WriteFile("updatelist.json", jsondata, 0644)
@@ -181,6 +183,8 @@ func loadcompanysetting() (ClientInfo, string, error) {
 
 // UpdateCMC update data from CMC
 func UpdateCMC() (StatusResponse, error) {
+	downlist = NewSyncDownLoadList()
+
 	cliinfo, updateurl, err := loadcompanysetting()
 	if err != nil {
 		Log.Log.Error(err)
@@ -250,7 +254,7 @@ func md5file(localpath, checksum string) (bool, error) {
 	return true, nil
 }
 
-func downloadFile(mfi ModuleFileItem, pathdownload string) error {
+func downloadFile(mfi ModuleFileItem, pathdownload, key string) error {
 	file := path.Base(mfi.DownloadURL)
 	localpath := path.Join(pathdownload, file)
 
@@ -279,6 +283,7 @@ func downloadFile(mfi ModuleFileItem, pathdownload string) error {
 	if md5file != mfi.Checksum {
 		return errors.New("download file checksum failed")
 	}
+	downlist.SetItem(key, localpath)
 	return nil
 }
 
@@ -330,7 +335,7 @@ func DownloadCMC(strpath string) ([]ModuleFileItem, error) {
 	if err1 == nil {
 		for _, it := range frameworks {
 			go func(mfi ModuleFileItem, wg *sync.WaitGroup) error {
-				err := downloadFile(mfi, strpath)
+				err := downloadFile(mfi, strpath, "hydradownload.framework")
 				if err != nil {
 					queue <- mfi
 				}
@@ -342,7 +347,7 @@ func DownloadCMC(strpath string) ([]ModuleFileItem, error) {
 	if err2 == nil {
 		for _, it := range phonedll {
 			go func(mfi ModuleFileItem, wg *sync.WaitGroup) error {
-				err := downloadFile(mfi, strpath)
+				err := downloadFile(mfi, strpath, "hydradownload.phonedll")
 				if err != nil {
 					queue <- mfi
 				}
@@ -354,7 +359,7 @@ func DownloadCMC(strpath string) ([]ModuleFileItem, error) {
 	if err3 == nil {
 		for _, it := range phonetip {
 			go func(mfi ModuleFileItem, wg *sync.WaitGroup) error {
-				err := downloadFile(mfi, strpath)
+				err := downloadFile(mfi, strpath, "hydradownload.phonetip")
 				if err != nil {
 					queue <- mfi
 				}
@@ -372,6 +377,9 @@ func DownloadCMC(strpath string) ([]ModuleFileItem, error) {
 
 	wg.Wait()
 	fmt.Println(faildowndlist)
+	if len(faildowndlist) == 0 {
+		downlist.SaveRedis()
+	}
 	return faildowndlist, nil
 }
 
@@ -384,7 +392,7 @@ func RetryDownload(items []ModuleFileItem, strpath string) ([]ModuleFileItem, er
 	queue := make(chan ModuleFileItem, 1)
 	for _, it := range items {
 		go func(mfi ModuleFileItem, wg *sync.WaitGroup) error {
-			err := downloadFile(mfi, strpath)
+			err := downloadFile(mfi, strpath, "")
 			if err != nil {
 				queue <- mfi
 			}
