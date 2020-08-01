@@ -255,7 +255,7 @@ func md5file(localpath, checksum string) (bool, error) {
 }
 
 func downloadFile(mfi ModuleFileItem, pathdownload, key string) error {
-	file := path.Base(mfi.DownloadURL)
+	file := mfi.Checksum + "_" + path.Base(mfi.DownloadURL)
 	localpath := path.Join(pathdownload, file)
 
 	if utils.FileExists(localpath) {
