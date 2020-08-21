@@ -6,6 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -157,18 +160,19 @@ func transcation(url string, info map[string]interface{}) (int, error) {
 }
 
 // ReportCMC to server
-func ReportCMC() error {
+func ReportCMC() (*ReportBaseFields, string, error) {
+	var staticurl string
 	var configInstall cmc.ConfigInstall //map[string]interface{}
 	if err := configInstall.LoadFile("serialconfig.json"); err != nil {
 		Log.Log.Error(err)
-		return err
+		return nil, staticurl, err
 	}
-
+	staticurl = configInstall.Results[0].Staticfileserver
 	reportbase := NewReportBaseFields()
 	if reportbase == nil {
 		err := errors.New("data base create failed")
 		Log.Log.Error(err)
-		return err
+		return reportbase, staticurl, err
 	}
 
 	reportbase.Operator, _ = datacentre.GetString("login.operator")
@@ -183,13 +187,70 @@ func ReportCMC() error {
 	items, err := reportbase.MergeRedis()
 	if err != nil {
 		Log.Log.Error(err)
-		return err
+		return reportbase, staticurl, err
 	}
 
 	_, err = transcation(configInstall.Results[0].Webserviceserver, items)
 	if err != nil {
 		Log.Log.Error(err)
+		saveDatatoFile(items)
+		return reportbase, staticurl, err
+	}
+	return reportbase, staticurl, nil
+}
+
+func saveDatatoFile(items map[string]interface{}) error {
+	uuid := fmt.Sprintf("%v", items["uuid"])
+	if _, err := os.Stat("transcationpool"); os.IsNotExist(err) {
+		// /var/log/anthena does not exist
+		if err = os.Mkdir("transcationpool", 0775); err != nil {
+			fmt.Println(err)
+		}
+	}
+	file, err := json.MarshalIndent(items, "", " ")
+	if err != nil {
 		return err
 	}
-	return nil
+	err = ioutil.WriteFile(uuid+".json", file, 0644)
+	return err
+}
+
+// SendLocalFiletoCMC send file to cmc
+func SendLocalFiletoCMC() {
+	var configInstall cmc.ConfigInstall //map[string]interface{}
+	if err := configInstall.LoadFile("serialconfig.json"); err != nil {
+		Log.Log.Error(err)
+		return
+	}
+	files, err := ioutil.ReadDir("transcationpool")
+	if err != nil {
+		Log.Log.Error(err)
+		return
+	}
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+		if filepath.Ext(file.Name()) == ".json" {
+			jsonFile, err := os.Open(filepath.Join("transcationpool", file.Name()))
+			// if we os.Open returns an error then handle it
+			if err != nil {
+				Log.Log.Error(err)
+				continue
+			}
+			// defer the closing of our jsonFile so that we can parse it later on
+			defer jsonFile.Close()
+
+			byteValue, _ := ioutil.ReadAll(jsonFile)
+			var items map[string]interface{}
+			if err := json.Unmarshal(byteValue, &items); err != nil {
+				Log.Log.Error(err)
+				continue
+			}
+			_, err = transcation(configInstall.Results[0].Webserviceserver, items)
+			if err == nil {
+				os.Remove(filepath.Join("transcationpool", file.Name()))
+			}
+		}
+	}
 }
