@@ -1,18 +1,22 @@
 package reportcmc
 
 import (
+	"bytes"
 	"crypto/rand"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"mime/multipart"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
 	"time"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/juju/fslock"
 
 	cmc "github.com/zytzjx/anthenacmc/cmcserverinfo"
 	"github.com/zytzjx/anthenacmc/datacentre"
@@ -103,7 +107,8 @@ func newUUID() (string, error) {
 	return fmt.Sprintf("%x%x%x%x%x", uuid[0:4], uuid[4:6], uuid[6:8], uuid[8:10], uuid[10:]), nil
 }
 
-func transcation(url string, info map[string]interface{}) (int, error) {
+// Transcation send json to server
+func Transcation(url string, info map[string]interface{}) (int, error) {
 	// Create a Resty Client
 	client := resty.New()
 	// POST Struct, default is JSON content type. No need to set one
@@ -160,7 +165,7 @@ func transcation(url string, info map[string]interface{}) (int, error) {
 }
 
 // ReportCMC to server
-func ReportCMC() (*ReportBaseFields, string, error) {
+func ReportCMC(logfile string) (*ReportBaseFields, string, error) {
 	var staticurl string
 	var configInstall cmc.ConfigInstall //map[string]interface{}
 	if err := configInstall.LoadFile("serialconfig.json"); err != nil {
@@ -190,16 +195,39 @@ func ReportCMC() (*ReportBaseFields, string, error) {
 		return reportbase, staticurl, err
 	}
 
-	_, err = transcation(configInstall.Results[0].Webserviceserver, items)
+	_, err = Transcation(configInstall.Results[0].Webserviceserver, items)
 	if err != nil {
 		Log.Log.Error(err)
-		saveDatatoFile(items)
+		saveDatatoFile(items, logfile)
 		return reportbase, staticurl, err
 	}
 	return reportbase, staticurl, nil
 }
 
-func saveDatatoFile(items map[string]interface{}) error {
+func copyFileContents(src, dst string) (err error) {
+	in, err := os.Open(src)
+	if err != nil {
+		return
+	}
+	defer in.Close()
+	out, err := os.Create(dst)
+	if err != nil {
+		return
+	}
+	defer func() {
+		cerr := out.Close()
+		if err == nil {
+			err = cerr
+		}
+	}()
+	if _, err = io.Copy(out, in); err != nil {
+		return
+	}
+	err = out.Sync()
+	return
+}
+
+func saveDatatoFile(items map[string]interface{}, logfile string) error {
 	uuid := fmt.Sprintf("%v", items["uuid"])
 	if _, err := os.Stat("transcationpool"); os.IsNotExist(err) {
 		// /var/log/anthena does not exist
@@ -211,22 +239,116 @@ func saveDatatoFile(items map[string]interface{}) error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(uuid+".json", file, 0644)
-	return err
+	err = ioutil.WriteFile("transcationpool/"+uuid+".json", file, 0644)
+	if err != nil {
+		return err
+	}
+	if _, err := os.Stat(logfile); err == nil {
+		Log.Log.Info("copy log to backup")
+		copyFileContents(logfile, "transcationpool/"+uuid+".zip")
+	}
+	return nil
+}
+
+// PostLogFile to server
+func PostLogFile(url, uuid, productid string, filePath string) error {
+
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		Log.Log.Infof("%s file not exist", filePath)
+		return nil
+	}
+
+	//打开文件句柄操作
+	file, err := os.Open(filePath)
+	if err != nil {
+		Log.Log.Error("error opening file")
+		return err
+	}
+	defer file.Close()
+
+	//创建一个模拟的form中的一个选项,这个form项现在是空的
+	bodyBuf := &bytes.Buffer{}
+	bodyWriter := multipart.NewWriter(bodyBuf)
+
+	//关键的一步操作, 设置文件的上传参数叫uploadfile, 文件名是filename,
+	//相当于现在还没选择文件, form项里选择文件的选项
+	fileWriter, err := bodyWriter.CreateFormFile("fileobj", uuid+".zip")
+	if err != nil {
+		Log.Log.Error("error writing to buffer")
+		return err
+	}
+
+	//iocopy 这里相当于选择了文件,将文件放到form中
+	_, err = io.Copy(fileWriter, file)
+	if err != nil {
+		return err
+	}
+
+	//获取上传文件的类型,multipart/form-data; boundary=...
+	contentType := bodyWriter.FormDataContentType()
+
+	//这里就是上传的其他参数设置,可以使用 bodyWriter.WriteField(key, val) 方法
+	//也可以自己在重新使用  multipart.NewWriter 重新建立一项,这个再server 会有例子
+	params := map[string]string{
+		"uuid":      uuid,
+		"productid": productid,
+	}
+	//这种设置值得仿佛 和下面再从新创建一个的一样
+	for key, val := range params {
+		_ = bodyWriter.WriteField(key, val)
+	}
+	//这个很关键,必须这样写关闭,不能使用defer关闭,不然会导致错误
+	bodyWriter.Close()
+
+	//发送post请求到服务端
+	url = fmt.Sprintf("%s%s", url, "uploadlog/")
+	resp, err := http.Post(url, contentType, bodyBuf)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	respbody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	fmt.Println(resp.Status)
+	fmt.Println(string(respbody))
+	// ioutil.WriteFile("fileresult.txt", respbody, 0644)
+
+	if resp.StatusCode == http.StatusOK {
+		rsjs := make(map[string]interface{})
+		if json.Unmarshal(respbody, &rsjs) != nil {
+			if errstr, ok := rsjs["error"]; ok {
+				return fmt.Errorf("http error, %s", errstr)
+			}
+		}
+		return nil
+	}
+	return fmt.Errorf("http error, %s", resp.Status)
+
 }
 
 // SendLocalFiletoCMC send file to cmc
-func SendLocalFiletoCMC() {
-	var configInstall cmc.ConfigInstall //map[string]interface{}
-	if err := configInstall.LoadFile("serialconfig.json"); err != nil {
-		Log.Log.Error(err)
+func SendLocalFiletoCMC(serviceserver string, staticserver string) {
+	// var configInstall cmc.ConfigInstall //map[string]interface{}
+	// if err := configInstall.LoadFile("serialconfig.json"); err != nil {
+	// 	Log.Log.Error(err)
+	// 	return
+	// }
+	lock := fslock.New(".uploadlist.lock")
+	lockErr := lock.TryLock()
+	if lockErr != nil {
 		return
 	}
 	files, err := ioutil.ReadDir("transcationpool")
+	// release the lock
+	lock.Unlock()
+
 	if err != nil {
 		Log.Log.Error(err)
 		return
 	}
+
 	for _, file := range files {
 		if file.IsDir() {
 			continue
@@ -247,9 +369,17 @@ func SendLocalFiletoCMC() {
 				Log.Log.Error(err)
 				continue
 			}
-			_, err = transcation(configInstall.Results[0].Webserviceserver, items)
+			uuid := fmt.Sprintf("%v", items["uuid"])
+			productid := fmt.Sprintf("%v", items["productid"])
+			logfile := filepath.Join("transcationpool", uuid+".zip")
+
+			_, err = Transcation(serviceserver, items)
 			if err == nil {
+				if PostLogFile(staticserver, uuid, productid, logfile) != nil {
+					continue
+				}
 				os.Remove(filepath.Join("transcationpool", file.Name()))
+				os.Remove(logfile)
 			}
 		}
 	}

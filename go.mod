@@ -6,6 +6,7 @@ require (
 	github.com/go-redis/redis/v8 v8.0.0-beta.6
 	github.com/go-resty/resty/v2 v2.3.0
 	github.com/jlaffaye/ftp v0.0.0-20200715164256-5d10dd64f695
+	github.com/juju/fslock v0.0.0-20160525022230-4d5c94c67b4b
 	github.com/lestrrat-go/file-rotatelogs v2.3.0+incompatible
 	github.com/lestrrat-go/strftime v1.0.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
