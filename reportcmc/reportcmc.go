@@ -57,9 +57,9 @@ func NewReportBaseFields() *ReportBaseFields {
 		Log.Log.Error("GetSerialConfig failed")
 		return &rbf
 	}
-	rbf.Site = config.Siteid
+	rbf.Site = config.Siteid.(string)
 	rbf.Company = config.Companyid.(string)
-	rbf.Productid = config.Productid
+	rbf.Productid = config.Productid.(string)
 	rbf.PortNumber = "1"
 	rbf.ErrorCode = "1"
 	rbf.EsnNumber = "000000000000000"
@@ -183,10 +183,10 @@ func ReportCMC(logfile string) (*ReportBaseFields, string, error) {
 	reportbase.Operator, _ = datacentre.GetString("login.operator")
 
 	if reportbase.Company == "" || reportbase.PortNumber == "" {
-		reportbase.Site = configInstall.Results[0].Siteid
+		reportbase.Site = configInstall.Results[0].Siteid.(string)
 		ii, _ := configInstall.Results[0].GetCompanyID()
 		reportbase.Company = strconv.Itoa(ii)
-		reportbase.Productid = configInstall.Results[0].Productid
+		reportbase.Productid = configInstall.Results[0].Productid.(string)
 		reportbase.PortNumber = "1"
 	}
 	items, err := reportbase.MergeRedis()
