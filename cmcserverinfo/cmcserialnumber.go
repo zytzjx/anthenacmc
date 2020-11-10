@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 
-// ConfigResult
+// ConfigResult from server
 type ConfigResult struct {
 	ID                 string      `json:"_id"`
 	Adminconsoleserver string      `json:"adminconsoleserver"`
@@ -19,9 +19,9 @@ type ConfigResult struct {
 	ServerTime         string      `json:"serverTime"`
 	Staticfileserver   string      `json:"staticfileserver"`
 	Webserviceserver   string      `json:"webserviceserver"`
-	Productid          string      `json:"productid"`
-	Siteid             string      `json:"siteid"`
-	Solutionid         string      `json:"solutionid"`
+	Productid          interface{} `json:"productid"`
+	Siteid             interface{} `json:"siteid"`
+	Solutionid         interface{} `json:"solutionid"`
 }
 
 // ConfigInstall uuid return
@@ -29,6 +29,57 @@ type ConfigInstall struct {
 	ID      int            `json:"id"`
 	Ok      int            `json:"ok"`
 	Results []ConfigResult `json:"results"`
+}
+
+// GetProductID , because server return sometime is int , sometimes is string
+func (cr ConfigResult) GetProductID() (int, error) {
+	var productid int
+	var err error
+	switch cr.Productid.(type) {
+	case int, int64, int16, int32:
+		productid = cr.Productid.(int)
+		return productid, nil
+	case string:
+		productid, err = strconv.Atoi(cr.Productid.(string))
+		return productid, err
+	default:
+		err = errors.New("no support format")
+		return 0, err
+	}
+}
+
+// GetSiteID , because server return sometime is int , sometimes is string
+func (cr ConfigResult) GetSiteID() (int, error) {
+	var siteid int
+	var err error
+	switch cr.Siteid.(type) {
+	case int, int64, int16, int32:
+		siteid = cr.Siteid.(int)
+		return siteid, nil
+	case string:
+		siteid, err = strconv.Atoi(cr.Siteid.(string))
+		return siteid, err
+	default:
+		err = errors.New("no support format")
+		return 0, err
+	}
+}
+
+// GetSolutionID company id , because server return sometime is int , sometimes is string
+func (cr ConfigResult) GetSolutionID() (int, error) {
+	var Solutionid int
+	var err error
+	switch cr.Solutionid.(type) {
+	case int, int64, int16, int32:
+		Solutionid = cr.Solutionid.(int)
+		return Solutionid, nil
+	case string:
+		Solutionid, err = strconv.Atoi(cr.Solutionid.(string))
+		return Solutionid, err
+	default:
+		err = errors.New("no support format")
+		return 0, err
+	}
 }
 
 // GetCompanyID company id , because server return sometime is int , sometimes is string

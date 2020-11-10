@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"strconv"
 
 	"github.com/go-resty/resty/v2"
 
@@ -213,7 +212,7 @@ func ParseLogResult(loginres cmc.LoginResult, companyID int, productID int, site
 }
 
 func main() {
-	Log.NewLogger("anthena")
+	Log.NewLogger("athena, version:20.11.09.0")
 	bLogin := flag.Bool("login", false, "-login login or get project config by serialnamber")
 	uuid := flag.String("uuid", "", "serialnumber of the project ")
 	username := flag.String("username", "", "login user name")
@@ -242,8 +241,8 @@ func main() {
 			os.Exit(5)
 		}
 		Companyid, _ := dat.Results[0].GetCompanyID()
-		Productid, _ := strconv.Atoi(dat.Results[0].Productid)
-		Siteid, _ := strconv.Atoi(dat.Results[0].Siteid)
+		Productid, _ := dat.Results[0].GetProductID()
+		Siteid, _ := dat.Results[0].GetSiteID()
 		ret = ParseLogResult(*loginres, Companyid, Productid, Siteid, false)
 		dmc.Set("login.reporter", loginres.IDReporter, 0)
 	}
