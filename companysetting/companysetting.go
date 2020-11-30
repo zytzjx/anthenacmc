@@ -149,9 +149,12 @@ func Download() (map[string]interface{}, error) {
 	requestSetting.Protocol = "3.0"
 	companyid, _ := configresult.GetCompanyID()
 	requestSetting.Client.Company = strconv.Itoa(companyid)
-	requestSetting.Client.Solutionid = configresult.Solutionid
-	requestSetting.Client.Productid = configresult.Productid
-	requestSetting.Client.Site = configresult.Siteid
+	slid, _ := configresult.GetSolutionID()
+	requestSetting.Client.Solutionid = strconv.Itoa(slid)
+	prdid, _ := configresult.GetProductID()
+	requestSetting.Client.Productid = strconv.Itoa(prdid)
+	siteid, _ := configresult.GetSiteID()
+	requestSetting.Client.Site = strconv.Itoa(siteid)
 	requestSetting.Client.ID = configresult.ID
 	requestSetting.Client.PCName = pcname
 	requestSetting.Client.Macaddr = mac
@@ -178,6 +181,7 @@ func Download() (map[string]interface{}, error) {
 		if err = json.Unmarshal(resp.Body(), &dat); err != nil {
 			return nil, fmt.Errorf("data format error. %v", err)
 		}
+		Log.Log.Info(string(resp.Body()))
 		return dat, nil
 		// fmt.Println(string(resp.Body()))
 	}
