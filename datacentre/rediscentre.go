@@ -49,6 +49,15 @@ func RedisPUBSUB(rdb *redis.Client) {
 	}
 }
 
+// IsEmptySaveSerialConfig sometime not save data to database
+func IsEmptySaveSerialConfig(confInstall cmc.ConfigInstall) {
+	cr, err := rdb.HGetAll(ctx, "serialconfig").Result()
+	if err == nil && len(cr) > 0 {
+		return
+	}
+	SaveSerialConfigRedis(confInstall)
+}
+
 // SaveSerialConfigRedis Save SerialConfig to Redis DB
 func SaveSerialConfigRedis(confInstall cmc.ConfigInstall) {
 	file, _ := json.Marshal(confInstall.Results[0])
