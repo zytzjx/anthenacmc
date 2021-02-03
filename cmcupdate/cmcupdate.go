@@ -174,8 +174,8 @@ func loadcompanysetting() (ClientInfo, string, error) {
 	}
 
 	cliinfo.Company, _ = dat.Results[0].GetCompanyID()
-	cliinfo.Productid, _ = strconv.Atoi(dat.Results[0].Productid)
-	cliinfo.Solutionid, _ = strconv.Atoi(dat.Results[0].Solutionid)
+	cliinfo.Productid, _ = dat.Results[0].GetProductID()
+	cliinfo.Solutionid, _ = dat.Results[0].GetSolutionID()
 	updateurl := dat.Results[0].Webserviceserver
 
 	return cliinfo, updateurl, nil
@@ -320,7 +320,7 @@ func cleanlocal(mfilist *[]ModuleFileItem, files *map[string]bool, root string) 
 	for _, it := range *mfilist {
 		file := it.Checksum + "_" + path.Base(it.DownloadURL)
 		if _, ok := (*files)[file]; !ok {
-			os.RemoveAll(root + "/*")
+			os.RemoveAll(root + "/")
 			RemoveRedis("hydradownload.framework")
 			RemoveRedis("hydradownload.phonedll")
 			RemoveRedis("hydradownload.phonetip")
@@ -339,8 +339,27 @@ func clearLocalFileAndRedis(fw, phdll, phtip []ModuleFileItem, root string) {
 	if len(files) == 0 {
 		return
 	}
+
 	if cleanlocal(&fw, &files, root) || cleanlocal(&phdll, &files, root) || cleanlocal(&phtip, &files, root) {
 	}
+}
+
+func loadupdatedownloadedlist() (StatusResponse, error) {
+	jsonFile, err := os.Open("updatelist.json")
+	// if we os.Open returns an error then handle it
+	if err != nil {
+		Log.Log.Error(err)
+		return StatusResponse{}, err
+	}
+	// defer the closing of our jsonFile so that we can parse it later on
+	defer jsonFile.Close()
+
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+	var sr StatusResponse
+	if err := json.Unmarshal(byteValue, &sr); err != nil {
+		return StatusResponse{}, err
+	}
+	return sr, nil
 }
 
 // DownloadCMC dowload from CMC server
@@ -353,10 +372,16 @@ func DownloadCMC(strpath string) ([]ModuleFileItem, error) {
 			return faildowndlist, err
 		}
 	}
+	srf, errf := loadupdatedownloadedlist()
 	sr, err := UpdateCMC()
 	if err != nil {
 		Log.Log.Error(err)
 		return faildowndlist, err
+	}
+	if errf == nil {
+		if srf.Framework.Version == sr.Framework.Version {
+			return faildowndlist, nil
+		}
 	}
 	count := 0
 	frameworks, err1 := changeToModuleItems(sr.Framework.Filelist)

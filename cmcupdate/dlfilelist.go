@@ -3,6 +3,7 @@ package cmcupdate
 import (
 	"errors"
 	"fmt"
+	"os"
 	"sync"
 
 	dmc "github.com/zytzjx/anthenacmc/datacentre"
@@ -68,6 +69,9 @@ func (sdll *SyncDownLoadList) SaveRedis() {
 	defer sdll.mutex.Unlock()
 
 	for k, v := range sdll.mp {
+		if k == "hydradownload.framework" && len(v) > 0 {
+			dmc.Set(k, v[0], 0)
+		}
 		for _, vv := range v {
 			dmc.AddSet(k, vv)
 		}
@@ -77,5 +81,9 @@ func (sdll *SyncDownLoadList) SaveRedis() {
 
 // RemoveRedis remove
 func RemoveRedis(key string) {
+	s, err := dmc.GetString("hydradownload.framework")
+	if err != nil && s != "" {
+		os.Remove(s)
+	}
 	dmc.Del(key)
 }
