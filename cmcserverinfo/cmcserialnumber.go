@@ -39,6 +39,9 @@ func (cr ConfigResult) GetProductID() (int, error) {
 	case int, int64, int16, int32:
 		productid = cr.Productid.(int)
 		return productid, nil
+	case float64, float32:
+		productid = int(cr.Productid.(float64))
+		return productid, nil
 	case string:
 		productid, err = strconv.Atoi(cr.Productid.(string))
 		return productid, err
@@ -55,6 +58,9 @@ func (cr ConfigResult) GetSiteID() (int, error) {
 	switch cr.Siteid.(type) {
 	case int, int64, int16, int32:
 		siteid = cr.Siteid.(int)
+		return siteid, nil
+	case float64, float32:
+		siteid = int(cr.Siteid.(float64))
 		return siteid, nil
 	case string:
 		siteid, err = strconv.Atoi(cr.Siteid.(string))
@@ -73,6 +79,9 @@ func (cr ConfigResult) GetSolutionID() (int, error) {
 	case int, int64, int16, int32:
 		Solutionid = cr.Solutionid.(int)
 		return Solutionid, nil
+	case float64, float32:
+		Solutionid = int(cr.Solutionid.(float64))
+		return Solutionid, nil
 	case string:
 		Solutionid, err = strconv.Atoi(cr.Solutionid.(string))
 		return Solutionid, err
@@ -89,6 +98,9 @@ func (cr ConfigResult) GetCompanyID() (int, error) {
 	switch cr.Companyid.(type) {
 	case int, int64, int16, int32:
 		Companyid = cr.Companyid.(int)
+		return Companyid, nil
+	case float64, float32:
+		Companyid = int(cr.Companyid.(float64))
 		return Companyid, nil
 	case string:
 		Companyid, err = strconv.Atoi(cr.Companyid.(string))

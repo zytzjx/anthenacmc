@@ -202,7 +202,7 @@ func UpdateCMC() (StatusResponse, error) {
 		syncstatus = *newSyncStatus(cliinfo)
 		return sendRequest(updateurl, syncstatus)
 	}
-	fmt.Println("Successfully Opened serialconfig.json")
+	fmt.Println("Successfully Opened clientstatus.json")
 	// defer the closing of our jsonFile so that we can parse it later on
 	defer jsonFile.Close()
 
@@ -344,26 +344,35 @@ func clearLocalFileAndRedis(fw, phdll, phtip []ModuleFileItem, root string) {
 	}
 }
 
-func loadupdatedownloadedlist() (StatusResponse, error) {
-	jsonFile, err := os.Open("updatelist.json")
+func loadupdatedownloadedlist(sfile string) (SyncStatus, error) {
+	jsonFile, err := os.Open(sfile)
 	// if we os.Open returns an error then handle it
 	if err != nil {
 		Log.Log.Error(err)
-		return StatusResponse{}, err
+		return SyncStatus{}, err
 	}
 	// defer the closing of our jsonFile so that we can parse it later on
 	defer jsonFile.Close()
 
 	byteValue, _ := ioutil.ReadAll(jsonFile)
-	var sr StatusResponse
+	var sr SyncStatus
 	if err := json.Unmarshal(byteValue, &sr); err != nil {
-		return StatusResponse{}, err
+		return SyncStatus{}, err
 	}
 	return sr, nil
 }
 
+//GetLastVersion get correct download
+func GetLastVersion(sfile string) string {
+	srf, errf := loadupdatedownloadedlist(sfile)
+	if errf != nil {
+		return ""
+	}
+	return srf.Sync.Status.Framework.Version
+}
+
 // DownloadCMC dowload from CMC server
-func DownloadCMC(strpath string) ([]ModuleFileItem, error) {
+func DownloadCMC(strpath string, lastversion string) ([]ModuleFileItem, error) {
 	var faildowndlist []ModuleFileItem
 	if _, err := os.Stat(strpath); os.IsNotExist(err) {
 		// /var/log/anthena does not exist
@@ -372,16 +381,15 @@ func DownloadCMC(strpath string) ([]ModuleFileItem, error) {
 			return faildowndlist, err
 		}
 	}
-	srf, errf := loadupdatedownloadedlist()
 	sr, err := UpdateCMC()
 	if err != nil {
 		Log.Log.Error(err)
 		return faildowndlist, err
 	}
-	if errf == nil {
-		if srf.Framework.Version == sr.Framework.Version {
-			return faildowndlist, nil
-		}
+
+	if lastversion == sr.Framework.Version && FrameworkIsExists() {
+		Log.Log.Info("find version is same")
+		return faildowndlist, nil
 	}
 	count := 0
 	frameworks, err1 := changeToModuleItems(sr.Framework.Filelist)

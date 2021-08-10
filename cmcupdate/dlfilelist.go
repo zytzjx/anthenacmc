@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	dmc "github.com/zytzjx/anthenacmc/datacentre"
+	"github.com/zytzjx/anthenacmc/utils"
 )
 
 // SyncDownLoadList downlist
@@ -77,6 +78,15 @@ func (sdll *SyncDownLoadList) SaveRedis() {
 		}
 	}
 	dmc.Set("hydradownload.status", "complete", 0)
+}
+
+// FrameworkIsExists framework is exists
+func FrameworkIsExists() bool {
+	s, err := dmc.GetString("hydradownload.framework")
+	if err != nil && s != "" {
+		return false
+	}
+	return utils.FileExists(s)
 }
 
 // RemoveRedis remove
