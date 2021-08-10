@@ -29,7 +29,7 @@ func BenchmarkNewUUID(b *testing.B) {
 
 func TestReportCMC(t *testing.T) {
 	Log.NewLogger("reportcmc")
-	ReportCMC()
+	ReportCMC("")
 }
 
 func TestReportResult(t *testing.T) {

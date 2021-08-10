@@ -19,7 +19,7 @@ func TestUpdateCMC(t *testing.T) {
 
 func TestDownloadCMC(t *testing.T) {
 	Log.NewLogger("updatecmc")
-	DownloadCMC("/opt/futuredial/hydradownloader")
+	DownloadCMC("/opt/futuredial/hydradownloader", "")
 }
 
 func TestListFils(t *testing.T) {
