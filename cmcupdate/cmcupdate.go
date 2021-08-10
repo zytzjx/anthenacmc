@@ -341,6 +341,7 @@ func clearLocalFileAndRedis(fw, phdll, phtip []ModuleFileItem, root string) {
 	}
 
 	if cleanlocal(&fw, &files, root) || cleanlocal(&phdll, &files, root) || cleanlocal(&phtip, &files, root) {
+		Log.Log.Info("cleanlocal call")
 	}
 }
 
