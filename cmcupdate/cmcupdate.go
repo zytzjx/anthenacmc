@@ -395,15 +395,30 @@ func DownloadCMC(strpath string, lastversion string) ([]ModuleFileItem, error) {
 	count := 0
 	frameworks, err1 := changeToModuleItems(sr.Framework.Filelist)
 	if err1 == nil {
-		count += len(frameworks)
+		for _, fw := range frameworks {
+			if fw.DownloadURL != "" {
+				count++
+			}
+		}
+		//count += len(frameworks)
 	}
 	phonedll, err2 := changeToModuleItems(sr.Phonedll.Filelist)
 	if err2 == nil {
-		count += len(phonedll)
+		for _, pl := range phonedll {
+			if pl.DownloadURL != "" {
+				count++
+			}
+		}
+		//count += len(phonedll)
 	}
 	phonetip, err3 := changeToModuleItems(sr.Phonetips.Filelist)
 	if err3 == nil {
-		count += len(phonetip)
+		for _, pt := range phonetip {
+			if pt.DownloadURL != "" {
+				count++
+			}
+		}
+		//count += len(phonetip)
 	}
 	clearLocalFileAndRedis(frameworks, phonedll, phonetip, strpath)
 	var wg sync.WaitGroup
