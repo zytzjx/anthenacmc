@@ -395,30 +395,15 @@ func DownloadCMC(strpath string, lastversion string) ([]ModuleFileItem, error) {
 	count := 0
 	frameworks, err1 := changeToModuleItems(sr.Framework.Filelist)
 	if err1 == nil {
-		for _, fw := range frameworks {
-			if fw.DownloadURL != "" {
-				count++
-			}
-		}
-		//count += len(frameworks)
+		count += len(frameworks)
 	}
 	phonedll, err2 := changeToModuleItems(sr.Phonedll.Filelist)
 	if err2 == nil {
-		for _, pl := range phonedll {
-			if pl.DownloadURL != "" {
-				count++
-			}
-		}
-		//count += len(phonedll)
+		count += len(phonedll)
 	}
 	phonetip, err3 := changeToModuleItems(sr.Phonetips.Filelist)
 	if err3 == nil {
-		for _, pt := range phonetip {
-			if pt.DownloadURL != "" {
-				count++
-			}
-		}
-		//count += len(phonetip)
+		count += len(phonetip)
 	}
 	clearLocalFileAndRedis(frameworks, phonedll, phonetip, strpath)
 	var wg sync.WaitGroup
@@ -426,38 +411,53 @@ func DownloadCMC(strpath string, lastversion string) ([]ModuleFileItem, error) {
 	queue := make(chan ModuleFileItem, 1)
 	if err1 == nil {
 		for _, it := range frameworks {
-			go func(mfi ModuleFileItem, wg *sync.WaitGroup) error {
-				err := downloadFile(mfi, strpath, "hydradownload.framework")
-				if err != nil {
-					queue <- mfi
-				}
+			if it.DownloadURL != "" {
+				go func(mfi ModuleFileItem, wg *sync.WaitGroup) error {
+					err := downloadFile(mfi, strpath, "hydradownload.framework")
+					if err != nil {
+						queue <- mfi
+					}
+					wg.Done()
+					return err
+				}(it, &wg)
+			} else {
+				Log.Log.Error("framework DownloadURL is empty")
 				wg.Done()
-				return err
-			}(it, &wg)
+			}
 		}
 	}
 	if err2 == nil {
 		for _, it := range phonedll {
-			go func(mfi ModuleFileItem, wg *sync.WaitGroup) error {
-				err := downloadFile(mfi, strpath, "hydradownload.phonedll")
-				if err != nil {
-					queue <- mfi
-				}
+			if it.DownloadURL != "" {
+				go func(mfi ModuleFileItem, wg *sync.WaitGroup) error {
+					err := downloadFile(mfi, strpath, "hydradownload.phonedll")
+					if err != nil {
+						queue <- mfi
+					}
+					wg.Done()
+					return err
+				}(it, &wg)
+			} else {
+				Log.Log.Error("phonedll DownloadURL is empty")
 				wg.Done()
-				return err
-			}(it, &wg)
+			}
 		}
 	}
 	if err3 == nil {
 		for _, it := range phonetip {
-			go func(mfi ModuleFileItem, wg *sync.WaitGroup) error {
-				err := downloadFile(mfi, strpath, "hydradownload.phonetip")
-				if err != nil {
-					queue <- mfi
-				}
+			if it.DownloadURL != "" {
+				go func(mfi ModuleFileItem, wg *sync.WaitGroup) error {
+					err := downloadFile(mfi, strpath, "hydradownload.phonetip")
+					if err != nil {
+						queue <- mfi
+					}
+					wg.Done()
+					return err
+				}(it, &wg)
+			} else {
+				Log.Log.Error("phonetip DownloadURL is empty")
 				wg.Done()
-				return err
-			}(it, &wg)
+			}
 		}
 	}
 
